@@ -53,24 +53,26 @@ async function buyTokens() {
       new solanaWeb3.PublicKey(USDT_MINT),
       new solanaWeb3.PublicKey(DEST_WALLET)
     );
-    tx.add(solanaWeb3.Token.createTransferInstruction(
-      solanaWeb3.TOKEN_PROGRAM_ID,
-      fromATA,
-      toATA,
-      payer,
-      [],
-      amount
-    ));
-    tx.feePayer = payer;
-    let { blockhash } = await conn.getLatestBlockhash();
-    tx.recentBlockhash = blockhash;
-    const signed = await provider.signTransaction(tx);
-    const txid = await conn.sendRawTransaction(signed.serialize());
-    document.getElementById("status").innerText = `Pago enviado. TxID: ${txid}`;
-  } catch (e) {
-    alert("Error al enviar USDT: " + e.message);
-  }
-}
+    const transaction = new solanaWeb3.Transaction().add(
+  splToken.createTransferInstruction(
+    fromATA,
+    toATA,
+    payer,
+    amount,
+    [],
+    splToken.TOKEN_PROGRAM_ID
+  )
+);
+
+transaction.feePayer = payer;
+const { blockhash } = await conn.getLatestBlockhash();
+transaction.recentBlockhash = blockhash;
+
+const signed = await provider.signTransaction(transaction);
+const signature = await conn.sendRawTransaction(signed.serialize());
+await conn.confirmTransaction(signature, "confirmed");
+
+document.getElementById("status").innerText = ✅ Pago enviado. TxID: ${signature};
 
 document.getElementById("connectWallet").onclick = connectWallet;
 document.getElementById("buyToken").onclick = buyTokens;
@@ -78,7 +80,7 @@ document.getElementById("buyToken").onclick = buyTokens;
 function startCountdown() {
   const endDate = new Date("2025-08-28T00:00:00Z").getTime();
   const interval = setInterval(function () {
-    const now = Date.now();
+    const now = Date.now();s
     const diff = endDate - now;
     if (diff <= 0) {
       clearInterval(interval);
